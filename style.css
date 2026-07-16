@@ -208,6 +208,15 @@ figure figcaption .pg {
   flex: none; min-width: 20px; height: 20px; border-radius: 6px; background: var(--blue-soft);
   color: var(--blue); font-size: .7rem; font-weight: 700; display: grid; place-items: center; padding: 0 5px;
 }
+/* placeholder: the real photo showed a customer ID, so it was removed */
+figure.ph { border-style: dashed; }
+.ph-box {
+  aspect-ratio: 4 / 3; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 18px; background: var(--bg);
+}
+.ph-box .ph-ic { font-size: 1.9rem; opacity: .5; }
+.ph-box .ph-t { font-size: .92rem; font-weight: 600; max-width: 90%; }
+.ph-box .ph-note { font-size: .74rem; color: var(--muted); max-width: 92%; }
 
 /* copy block */
 .copy pre {

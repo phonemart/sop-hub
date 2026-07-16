@@ -136,6 +136,17 @@ function home(q) {
 function figures(t, from, to) {
   const g = el('div', 'grid');
   t.pages.filter((p) => p.n >= from && p.n <= to).forEach((p) => {
+    if (p.placeholder) {
+      // real photo removed because it showed a customer's ID — keep the instruction
+      const f = el('figure', 'ph');
+      const box = el('div', 'ph-box');
+      box.append(el('div', 'ph-ic', '📷'), el('div', 'ph-t', p.short || p.caption || ''),
+        el('div', 'ph-note', 'รูปตัวอย่างถอดออก (มีข้อมูลลูกค้า) — ถ่ายตามคำอธิบาย'));
+      const c = el('figcaption');
+      c.append(el('span', 'pg', String(p.n)), el('span', null, p.short || p.caption || ''));
+      f.append(box, c); g.append(f);
+      return;
+    }
     const f = el('figure');
     const im = el('img');
     im.src = img(t.slug, p.n); im.loading = 'lazy'; im.decoding = 'async';
@@ -254,13 +265,13 @@ function topic(slug) {
   scrollTo(0, 0);
 }
 
-/* ── lightbox: swipe + pinch + pan ───────────────────────────── */
-const LB = { t: null, i: 0, sc: 1, tx: 0, ty: 0, w: 0 };
+/* ── lightbox: swipe + pinch + pan (real photos only) ────────── */
+const LB = { t: null, pages: [], i: 0, sc: 1, tx: 0, ty: 0, w: 0 };
 const cap = (p) => p.short || p.caption || '';
 
 function lbRender() {
   const tr = $('#lbTrack'); tr.replaceChildren();
-  LB.t.pages.forEach((p) => {
+  LB.pages.forEach((p) => {
     const s = el('div', 'lb-slide');
     const im = el('img'); im.decoding = 'async'; im.src = img(LB.t.slug, p.n); im.alt = cap(p);
     s.append(im); tr.append(s);
@@ -273,17 +284,18 @@ function lbApply(anim) {
   tr.style.transform = 'translateX(' + (-LB.i * LB.w) + 'px)';
   const im = tr.children[LB.i]?.firstChild;
   if (im) im.style.transform = `translate(${LB.tx}px,${LB.ty}px) scale(${LB.sc})`;
-  $('#lbBar .num').textContent = (LB.i + 1) + ' / ' + LB.t.pages.length;
-  $('#lbBar .cap').textContent = cap(LB.t.pages[LB.i]);
+  $('#lbBar .num').textContent = (LB.i + 1) + ' / ' + LB.pages.length;
+  $('#lbBar .cap').textContent = cap(LB.pages[LB.i]);
 }
 function lbGo(i) {
-  LB.i = Math.max(0, Math.min(LB.t.pages.length - 1, i));
+  LB.i = Math.max(0, Math.min(LB.pages.length - 1, i));
   LB.sc = 1; LB.tx = 0; LB.ty = 0;
   [...$('#lbTrack').children].forEach((s) => { s.firstChild.style.transform = ''; });
   lbApply(true);
 }
 function lbOpen(t, n) {
-  LB.t = t; LB.i = t.pages.findIndex((p) => p.n === n); if (LB.i < 0) LB.i = 0;
+  LB.t = t; LB.pages = t.pages.filter((p) => !p.placeholder);
+  LB.i = LB.pages.findIndex((p) => p.n === n); if (LB.i < 0) LB.i = 0;
   LB.sc = 1; LB.tx = 0; LB.ty = 0;
   lbRender(); $('#lb').hidden = false; document.body.style.overflow = 'hidden';
   lbApply(false);
