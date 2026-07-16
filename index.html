@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#141c3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="คู่มือหน้าร้าน">
+<title>คู่มือหน้าร้าน Thunder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="gate">
+  <h1>คู่มือหน้าร้าน</h1>
+  <p>ใส่รหัส 4 หลักเพื่อเข้าใช้งาน</p>
+  <div class="dots"></div>
+  <div id="gateErr"></div>
+  <div class="pad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <span></span><button data-k="0">0</button><button class="wide" data-k="del">ลบ</button>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="bar">
+      <button class="brand"><span class="bolt">⚡</span><b id="site">คู่มือหน้าร้าน</b></button>
+      <button id="sBtn" aria-label="ค้นหา">🔍</button>
+    </div>
+    <div class="search" hidden>
+      <input id="q" type="search" inputmode="search" enterkeyhint="search"
+             autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="ค้นหา เช่น ล็อคเครื่อง, ลูกค้าไม่จ่าย">
+      <button class="clr" aria-label="ปิดค้นหา">✕</button>
+    </div>
+    <nav id="nav"></nav>
+  </header>
+
+  <div id="ddWrap" hidden><div id="dd"></div></div>
+  <main id="view"></main>
+</div>
+
+<div id="lb" hidden>
+  <div id="lbBar">
+    <button class="x" aria-label="ปิด">✕</button>
+    <span class="cap"></span>
+    <span class="num"></span>
+  </div>
+  <div id="lbTrack"></div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
