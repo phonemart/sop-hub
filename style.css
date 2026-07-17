@@ -219,12 +219,24 @@ figure.ph { border-style: dashed; }
 .ph-box .ph-note { font-size: .74rem; color: var(--muted); max-width: 92%; }
 
 /* copy block */
+.copy h3 { font-size: .9rem; font-weight: 700; margin-bottom: 9px; }
 .copy pre {
   white-space: pre-wrap; font: inherit; font-size: .85rem;
   background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
-  max-height: 240px; overflow: auto;
+  max-height: 340px; overflow: auto;
 }
 .copy button.cp { margin-top: 9px; width: 100%; height: var(--tap); border-radius: 12px; background: var(--blue); color: #fff; font-weight: 600; font-size: .9rem; }
+
+/* text-only manual (doc layout) */
+.doc-sum { color: var(--muted); font-size: .88rem; margin: 6px 2px 14px; }
+h2.doc-h { font-size: 1rem; font-weight: 700; margin: 20px 2px 9px; }
+.panel + .panel { margin-top: 10px; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+table.tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
+table.tbl th, table.tbl td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+table.tbl th { background: var(--blue-soft); color: var(--blue); font-weight: 700; white-space: nowrap; }
+table.tbl tr:last-child td { border-bottom: 0; }
+.tbl-note { color: var(--muted); font-size: .78rem; margin: 8px 2px 0; }
 
 .hint { color: var(--muted); font-size: .85rem; text-align: center; padding: 34px 10px; }
 mark { background: #ffe58a; color: #16192b; border-radius: 3px; padding: 0 1px; }

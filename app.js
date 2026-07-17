@@ -92,6 +92,8 @@ $('#ddWrap').onclick = (e) => { if (e.target.id === 'ddWrap') closeDD(); };
 const hay = (t) => [t.title, t.subtitle, t.summary, ...(t.keywords || []),
   ...(t.steps || []).flatMap((s) => [s.title, s.detail]),
   ...(t.chapters || []).flatMap((c) => [c.name, c.summary, ...(c.steps || [])]),
+  ...(t.templates || []).flatMap((x) => [x.label, x.text]),
+  ...(t.table ? [t.table.title, ...t.table.rows.flat()] : []),
   ...(t.warnings || []), ...t.pages.map((p) => p.caption || p.short || '')].join(' ').toLowerCase();
 D.topics.forEach((t) => { t._hay = hay(t); });
 
@@ -116,7 +118,7 @@ function tile(t, sub) {
   const th = el('div', 'thumb');
   const im = el('img'); im.src = 'assets/covers/' + t.slug + '.webp';
   im.loading = 'lazy'; im.decoding = 'async'; im.alt = '';
-  th.append(im, el('span', 'em', t.icon), el('span', 'n', t.pages.length + ' รูป'));
+  th.append(im, el('span', 'em', t.icon), el('span', 'n', t.doc ? 'คู่มือ' : t.pages.length + ' รูป'));
   const l = el('div', 'lab'); l.append(el('b', null, t.title));
   const s = el('small'); s.innerHTML = sub || esc(t.subtitle); l.append(s);
   a.append(th, l);
@@ -219,6 +221,55 @@ function drawerTabs(t, v) {
   return bar.children.length ? bar : null;
 }
 
+function copyCard(label, text) {
+  const p = el('div', 'panel copy');
+  if (label) p.append(el('h3', null, label));
+  p.append(el('pre', null, text));
+  const cp = el('button', 'cp', '📋 คัดลอก');
+  cp.onclick = async () => {
+    try { await navigator.clipboard.writeText(text); cp.textContent = '✓ คัดลอกแล้ว'; }
+    catch { cp.textContent = 'คัดลอกไม่ได้ — กดค้างที่ข้อความแทน'; }
+    setTimeout(() => { cp.textContent = '📋 คัดลอก'; }, 1600);
+  };
+  p.append(cp);
+  return p;
+}
+
+// text-only manual: everything visible, message templates are copy-able
+function renderDoc(t, v) {
+  if (t.summary) v.append(el('p', 'doc-sum', t.summary));
+
+  if (t.warnings?.length) {
+    const w = el('div', 'panel warn'); w.append(el('b', null, '⚠️ ข้อควรระวัง (กฎหมายทวงถามหนี้)'));
+    const u = el('ul'); t.warnings.forEach((x) => u.append(el('li', null, x)));
+    w.append(u); v.append(w);
+  }
+  if (t.steps?.length) {
+    v.append(el('h2', 'doc-h', 'ขั้นตอนงาน'));
+    const p = el('div', 'panel'); const o = el('ol', 'steps');
+    t.steps.forEach((s, i) => {
+      const li = el('li'); li.append(el('div', 'n', String(i + 1)));
+      const d = el('div'); d.append(el('b', null, s.title), el('p', null, s.detail));
+      li.append(d); o.append(li);
+    });
+    p.append(o); v.append(p);
+  }
+  if (t.table) {
+    v.append(el('h2', 'doc-h', t.table.title));
+    const wrap = el('div', 'tbl-wrap'); const tb = el('table', 'tbl');
+    const tr = el('tr'); t.table.headers.forEach((hh) => tr.append(el('th', null, hh)));
+    tb.append(tr);
+    t.table.rows.forEach((r) => { const row = el('tr'); r.forEach((c) => row.append(el('td', null, c))); tb.append(row); });
+    wrap.append(tb); v.append(wrap);
+    if (t.table.note) v.append(el('p', 'tbl-note', t.table.note));
+  }
+  if (t.templates?.length) {
+    v.append(el('h2', 'doc-h', 'แม่แบบข้อความ (กดคัดลอกส่งได้เลย)'));
+    t.templates.forEach((x) => v.append(copyCard(x.label, x.text)));
+  }
+  scrollTo(0, 0);
+}
+
 function topic(slug) {
   const t = BY[slug]; const v = $('#view'); v.replaceChildren();
   if (!t) { v.append(el('p', 'hint', 'ไม่พบคู่มือนี้')); return; }
@@ -228,6 +279,8 @@ function topic(slug) {
   const h1 = el('h1'); h1.append(el('span', 'em', t.icon), el('span', null, t.title));
   h.append(h1, el('p', null, t.subtitle));
   v.append(h);
+
+  if (t.doc) { renderDoc(t, v); return; }
 
   const bar = drawerTabs(t, v);
   if (bar) v.insertBefore(bar, v.children[2]);
