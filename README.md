@@ -39,24 +39,58 @@ git commit -am "เปลี่ยน PIN" && git push
 | ไฟล์ | คืออะไร |
 |---|---|
 | `index.html` `style.css` `app.js` | ตัวเว็บ |
-| `data.js` | เนื้อหาคู่มือทั้งหมด (หัวข้อ ขั้นตอน ข้อควรระวัง คำค้น) + hash ของ PIN |
-| `assets/<slug>/NN.webp` | รูปคู่มือ ย่อ+บีบอัดแล้ว |
-| `assets/<slug>/*.pdf` | ไฟล์ต้นฉบับให้โหลด |
-| `sw.js` | คู่มือที่เคยเปิดแล้ว จะเปิดซ้ำได้ตอนเน็ตไม่มี |
+| `data.js` | เนื้อหาคู่มือทั้งหมด (สร้างจาก `tools/build_data.py` — อย่าแก้มือถ้าไม่จำเป็น) + hash ของ PIN |
+| `assets/<slug>/NN.webp` | รูปคู่มือ ย่อ+บีบอัด+เบลอ PII แล้ว |
+| `assets/<slug>/<slug>.pdf` | PDF ให้โหลด (สร้างจากรูปที่เบลอแล้ว) |
+| `assets/covers/<slug>.webp` | รูปปกหน้าแรก |
+| `sw.js` | คู่มือที่เคยเปิดแล้ว เปิดซ้ำได้ตอนไม่มีเน็ต |
+| `tools/source/` | **ต้นทางเนื้อหา** — แก้ที่นี่แล้ว build ใหม่ |
+| `tools/*.py` | สคริปต์ดูแลเว็บ (ดูด้านล่าง) |
+
+## สคริปต์ดูแลเว็บ (`tools/`)
+
+รันจากโฟลเดอร์ repo นี้ ต้องมี Python 3 + `pip install pillow` (สแกน QR ต้องมี `opencv-python pymupdf numpy`)
+
+| คำสั่ง | ทำอะไร |
+|---|---|
+| `python3 tools/build_data.py` | สร้าง `data.js` ใหม่จาก `tools/source/` (คง PIN เดิม) |
+| `python3 tools/build_data.py 1234` | สร้างใหม่ + เปลี่ยน PIN เป็น 1234 |
+| `python3 tools/rebuild_media.py` | สร้าง PDF + รูปปกใหม่จากรูปปัจจุบัน + สแกน QR/บาร์โค้ด |
+| `python3 tools/redact.py preview <slug> <n> --grid` | ดูรูป (มีเส้นพิกัด) เพื่อหาจุดเบลอ |
+| `python3 tools/redact.py blur <slug> <n> x0,y0,x1,y1` | เบลอ (พิกัดเป็นสัดส่วน 0–1) |
 
 ## แก้ข้อความในคู่มือ
 
-แก้ที่ `data.js` ได้ตรงๆ (เป็น JSON บรรทัดเดียว — เปิดใน VS Code แล้วกด Format Document ก่อน)
-แล้ว `git push` ขึ้นเลย
+1. แก้ไฟล์ใน `tools/source/`:
+   - **คำบรรยายใต้รูป / ชื่อ / คำโปรย** → `content_short.json`
+   - **คู่มือแบบเอกสาร** (เช่น ติดตามหนี้) → `tools/source/docs/<ชื่อ>.json` แก้ได้ตรงๆ
+2. `python3 tools/build_data.py`
+3. `git commit -am "แก้ข้อความ" && git push`
 
 ## เพิ่มคู่มือใหม่
 
-1. เอารูปใส่ `assets/<slug-ใหม่>/01.webp`, `02.webp`, ...
-   (ย่อให้กว้างไม่เกิน 1500px ก่อน ไม่งั้นเว็บจะอืดบนมือถือ)
-2. เพิ่ม topic ใน `data.js` → ต้องมี `slug` `title` `subtitle` `icon` `summary` `keywords` `pages`
-3. เพิ่ม slug นั้นใน `tax.categories[].slugs` และ `tax.order` ไม่งั้นจะไม่ขึ้นหน้าแรก
+**แบบมีรูป:**
+1. ใส่รูป `assets/<slug>/01.webp` … (กว้างไม่เกิน 1500px, **ตรวจ PII ก่อน** — ดูด้านล่าง)
+2. เพิ่ม topic ใน `tools/source/content_main.json` (`slug` `title` `subtitle` `icon` `summary` `keywords` `pages`)
+   และเพิ่ม slug ใน `tax.categories[].slugs` + `tax.order`
+3. เพิ่มคำบรรยายสั้นใน `content_short.json`
+4. `python3 tools/rebuild_media.py && python3 tools/build_data.py && git push`
+
+**แบบเอกสาร (ไม่มีรูป เช่น คู่มือติดตามหนี้):**
+1. ก็อป `tools/source/docs/collections.json` เป็นไฟล์ใหม่ แก้เนื้อหา
+   (`doc:true`, มี `steps` / `templates` / `table` / `warnings` / `category` ได้)
+2. `python3 tools/build_data.py && git push` — หมวดใหม่ขึ้นเมนูอัตโนมัติ
+
+## ⚠️ ตรวจ PII ก่อนเพิ่มรูปทุกครั้ง
+
+repo เป็นสาธารณะ รูปที่มีข้อมูลลูกค้า (บัตร ปชช, หน้า, เบอร์, บัญชี, ลายเซ็น, Serial/IMEI,
+**QR/บาร์โค้ดที่สแกนได้**) ห้ามขึ้นดิบ ต้อง:
+1. `python3 tools/redact.py preview <slug> <n> --grid` แล้วดูรูป หา PII
+2. `python3 tools/redact.py blur <slug> <n> ...` เบลอทุกจุด (เผื่อขอบเกินตัวอักษร)
+3. `python3 tools/rebuild_media.py` → ต้องขึ้น `QR/barcode scan: clean ✓`
 
 ## ที่มาของเนื้อหา
 
 จากโฟลเดอร์ `Desktop/รวม sop` (10 คู่มือ) + สไลด์ ATOME TEACH 59 ใบ
 ที่ `Desktop/Screenshot/mdm atom` — ต้นฉบับยังอยู่ครบ ไม่ได้ลบ
+คู่มือติดตามหนี้เขียนเพิ่มเอง (`tools/source/docs/collections.json`)
